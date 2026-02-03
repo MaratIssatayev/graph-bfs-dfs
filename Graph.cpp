@@ -14,14 +14,6 @@ void Graph::addEdge(int u, int v) {
     }
 }
 
-void Graph::removeEdge(int u, int v) {
-    adj[u].erase(remove(adj[u].begin(), adj[u].end(), v), adj[u].end());
-    if (!directed) {
-        adj[v].erase(remove(adj[v].begin(), adj[v].end(), u), adj[v].end());
-    }
-    edges--;
-}
-
 vector<int> Graph::neighbors(int u) const {
     return adj[u];
 }
@@ -31,12 +23,13 @@ int Graph::E() const { return edges; }
 
 vector<vector<int>> Graph::adjacencyMatrix() const {
     vector<vector<int>> m(n, vector<int>(n, 0));
-    for (int u = 0; u < n; u++)
-        for (int v : adj[u])
-            m[u][v] = 1;
+    for (int i = 0; i < n; i++)
+        for (int j : adj[i])
+            m[i][j] = 1;
     return m;
 }
 
+// ================= BFS =================
 void Graph::BFS(int start,
                 vector<int>& order,
                 vector<int>& dist,
@@ -82,14 +75,14 @@ vector<int> Graph::shortestPathUnweighted(int s, int t) const {
     return path;
 }
 
+// ================= DFS =================
 void Graph::dfsRecUtil(int v, vector<bool>& visited, vector<int>& order) const {
     visited[v] = true;
     order.push_back(v);
 
-    for (int u : adj[v]) {
+    for (int u : adj[v])
         if (!visited[u])
             dfsRecUtil(u, visited, order);
-    }
 }
 
 void Graph::DFS_recursive(int start, vector<int>& order) const {
@@ -110,15 +103,45 @@ void Graph::DFS_iterative(int start, vector<int>& order) const {
         visited[v] = true;
         order.push_back(v);
 
-        for (auto it = adj[v].rbegin(); it != adj[v].rend(); ++it) {
+        for (auto it = adj[v].rbegin(); it != adj[v].rend(); ++it)
             if (!visited[*it])
                 st.push(*it);
-        }
     }
 }
 
+// ========== Connected Components ==========
+vector<vector<int>> Graph::connectedComponents() const {
+    vector<bool> visited(n, false);
+    vector<vector<int>> components;
+
+    for (int i = 0; i < n; i++) {
+        if (!visited[i]) {
+            vector<int> comp;
+            stack<int> st;
+            st.push(i);
+            visited[i] = true;
+
+            while (!st.empty()) {
+                int v = st.top();
+                st.pop();
+                comp.push_back(v);
+
+                for (int u : adj[v]) {
+                    if (!visited[u]) {
+                        visited[u] = true;
+                        st.push(u);
+                    }
+                }
+            }
+            components.push_back(comp);
+        }
+    }
+    return components;
+}
+
+// ========== Cycle Detection (Directed) ==========
 bool Graph::cycleUtil(int v, vector<int>& color) const {
-    color[v] = 1; // серый
+    color[v] = 1; // gray
 
     for (int u : adj[v]) {
         if (color[u] == 1) return true;
@@ -126,7 +149,7 @@ bool Graph::cycleUtil(int v, vector<int>& color) const {
             return true;
     }
 
-    color[v] = 2; // чёрный
+    color[v] = 2; // black
     return false;
 }
 
